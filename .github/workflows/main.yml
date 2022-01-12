@@ -27,7 +27,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Download the regression_test package
-        run: git clone https://github.com/calab-ntu/gamer_regression_test.git
+        run: git clone https://github.com/calab-ntu/gamer_regression_test
 
       - name: Run the test.
         run: |
