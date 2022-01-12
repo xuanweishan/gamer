@@ -69,7 +69,7 @@ Procedure for outputting new variables:
 
 
 //-------------------------------------------------------------------------------------------------------
-// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2440)
+// Function    :  Output_DumpData_Total_HDF5 (FormatVersion = 2441)
 // Description :  Output all simulation data in the HDF5 format, which can be used as a restart file
 //                or loaded by YT
 //
@@ -211,6 +211,7 @@ Procedure for outputting new variables:
 //                2438 : 2021/06/05 --> output git information
 //                2439 : 2021/06/05 --> output UniqueDataID
 //                2440 : 2021/06/17 --> output NFieldStored, NMagStored, and NFieldStoredMax
+//                2441 : 2021/10/20 --> output OPT__FREEZE_FLUID
 //-------------------------------------------------------------------------------------------------------
 void Output_DumpData_Total_HDF5( const char *FileName )
 {
@@ -1110,7 +1111,7 @@ void Output_DumpData_Total_HDF5( const char *FileName )
                                             CheckMinPres_No, NULL_REAL, Emag, EoS_DensEint2Pres_CPUPtr,
                                             EoS_AuxArray_Flt, EoS_AuxArray_Int, h_EoS_Table, NULL );
                      Cs2  = EoS_DensPres2CSqr_CPUPtr( u[DENS], Pres, u+NCOMP_FLUID, EoS_AuxArray_Flt, EoS_AuxArray_Int,
-                                                      h_EoS_Table, NULL );
+                                                      h_EoS_Table );
                      FieldData[PID][k][j][i] = SQRT( Cs2 );
                   }
                } // if ( v == CsDumpIdx )
@@ -1685,7 +1686,7 @@ void FillIn_KeyInfo( KeyInfo_t &KeyInfo, const int NFieldStored )
 
    const time_t CalTime = time( NULL );   // calendar time
 
-   KeyInfo.FormatVersion        = 2440;
+   KeyInfo.FormatVersion        = 2441;
    KeyInfo.Model                = MODEL;
    KeyInfo.NLevel               = NLEVEL;
    KeyInfo.NCompFluid           = NCOMP_FLUID;
@@ -2417,6 +2418,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
 
    InputPara.Opt__OverlapMPI         = OPT__OVERLAP_MPI;
    InputPara.Opt__ResetFluid         = OPT__RESET_FLUID;
+   InputPara.Opt__FreezeFluid        = OPT__FREEZE_FLUID;
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    InputPara.MinDens                 = MIN_DENS;
 #  endif
@@ -2562,7 +2564,7 @@ void FillIn_InputPara( InputPara_t &InputPara, const int NFieldStored, char Fiel
    InputPara.Opt__Output_Part        = OPT__OUTPUT_PART;
    InputPara.Opt__Output_User        = OPT__OUTPUT_USER;
 #  ifdef PARTICLE
-   InputPara.Opt__Output_ParText     = OPT__OUTPUT_PAR_TEXT;
+   InputPara.Opt__Output_Par_Mode    = OPT__OUTPUT_PAR_MODE;
 #  endif
    InputPara.Opt__Output_BasePS      = OPT__OUTPUT_BASEPS;
    InputPara.Opt__Output_Base        = OPT__OUTPUT_BASE;
@@ -3256,6 +3258,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
 
    H5Tinsert( H5_TypeID, "Opt__OverlapMPI",         HOFFSET(InputPara_t,Opt__OverlapMPI        ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__ResetFluid",         HOFFSET(InputPara_t,Opt__ResetFluid        ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__FreezeFluid",        HOFFSET(InputPara_t,Opt__FreezeFluid       ), H5T_NATIVE_INT              );
 #  if ( MODEL == HYDRO  ||  MODEL == ELBDM )
    H5Tinsert( H5_TypeID, "MinDens",                 HOFFSET(InputPara_t,MinDens                ), H5T_NATIVE_DOUBLE           );
 #  endif
@@ -3381,7 +3384,7 @@ void GetCompound_InputPara( hid_t &H5_TypeID, const int NFieldStored )
    H5Tinsert( H5_TypeID, "Opt__Output_Part",        HOFFSET(InputPara_t,Opt__Output_Part       ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_User",        HOFFSET(InputPara_t,Opt__Output_User       ), H5T_NATIVE_INT              );
 #  ifdef PARTICLE
-   H5Tinsert( H5_TypeID, "Opt__Output_ParText",     HOFFSET(InputPara_t,Opt__Output_ParText    ), H5T_NATIVE_INT              );
+   H5Tinsert( H5_TypeID, "Opt__Output_Par_Mode",    HOFFSET(InputPara_t,Opt__Output_Par_Mode   ), H5T_NATIVE_INT              );
 #  endif
    H5Tinsert( H5_TypeID, "Opt__Output_BasePS",      HOFFSET(InputPara_t,Opt__Output_BasePS     ), H5T_NATIVE_INT              );
    H5Tinsert( H5_TypeID, "Opt__Output_Base",        HOFFSET(InputPara_t,Opt__Output_Base       ), H5T_NATIVE_INT              );
