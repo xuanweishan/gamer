@@ -1,0 +1,13 @@
+Error compare:
+ L1_Err:
+  expect:       regression_test/tests/AcousticWave/convergence_compare
+  result:       regression_test/tests/AcousticWave/table__convergence
+  level0:
+  level1:
+
+identicle:
+ Data_000000:
+  expect:		
+  result:
+  level0:
+  level1:
