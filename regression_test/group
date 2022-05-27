@@ -1,4 +1,4 @@
-group:
+test_group:
  - Riemann
  - BlastWave
  - AcousticWave
