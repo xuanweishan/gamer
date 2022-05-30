@@ -86,7 +86,7 @@ def download_test_compare_data(test_name,local_folder,version='latest',**kwargs)
 
 def upload_folder(target_folder,local_folder,**kwargs):
 	#target_folder = test_folder_Path
-	command = [girder_path,'--api-url',apiUrl,'--api-key',apiKey,'upload','--parent-type','folder',target_folder,local_folder]
+	command = ['/work1/xuanshan/python3.10.4/bin/python3', girder_path,'--api-url',apiUrl,'--api-key',apiKey,'upload','--parent-type','folder',target_folder,local_folder]
 	
 	try:
 		subprocess.check_call(command)
