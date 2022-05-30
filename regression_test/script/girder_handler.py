@@ -13,7 +13,7 @@ apiUrl='https://girder.hub.yt/api/v1'
 apiKey='EVZJxsPrMpLWT7nrXCUNEqFQNEg1cKQ1mfttPAHS'
 parent_folder = '/user/xuanweishan/gamer_regression_test'
 
-girder_path = '/usr/local/bin/girder-cli'
+girder_path = '/work1/xuanshan/python_package/girder_client/cli.py'
 
 def load_latest_list():
 	#list all version files
@@ -40,7 +40,7 @@ def download_folder(hub_yt_folder_name,local_folder,**kwargs):
 	#download all files in a hub.yt folder to local folder with girder-cli command.
 	target_folder = parent_folder + hub_yt_folder_name
 
-	command = [girder_path,'--api-url',apiUrl,'--api-key',apiKey,'download','--parent-type','folder',target_folder,local_folder]
+	command = ['/work1/xuanshan/python3.10.4/bin/python3', girder_path,'--api-url',apiUrl,'--api-key',apiKey,'download','--parent-type','folder',target_folder,local_folder]
 	try:
 		subprocess.check_call(command)
 	except subprocess.CalledProcessError as err:
