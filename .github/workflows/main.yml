@@ -25,7 +25,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
-      - name: Set up gamer and library path on eureka the in the Makefile
+      - name: Set up gamer and library path on eureka the in the Makefile and run test.
         run: |
           #Set up GPU archetecher
           sed -i 's/SIMU_OPTION += -DGPU_ARCH/SIMU_OPTION += -DGPU_ARCH=TURING #/g' src/Makefile
@@ -35,8 +35,7 @@ jobs:
           sed -i 's/#HDF5_PATH\s*:=\/software/HDF5_PATH    := \/software/g' src/Makefile
           sed -i 's/#MPI_PATH\s*:=\/sofrware/MPI_PATH     := \/software/g' src/Makefile
           sed -i 's/#GSL_PATH\s*:=\/software/GSL_PATH     := \/software/g' src/Makefile
-      
-      - name: Run the test.
-        run: |
+          
           cd regression_test
-          python regression_test.py -t test_group
+          #python regression_test.py -t test_group
+          sh action_script.job
