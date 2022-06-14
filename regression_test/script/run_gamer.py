@@ -11,8 +11,8 @@ import numpy as np
 from hdf5_file_config import hdf_info_read
 from log_pipe import LogPipe
 from os.path import isdir,isfile
-
-gamer_abs_path = '/work1/xuanshan/gamer'
+ 
+gamer_abs_path = os.path.dirname(os.getcwd)
 config_path = gamer_abs_path + '/regression_test/tests/AGORA_IsolatedGalaxy/configs'
 analyze_path = gamer_abs_path + '/regression_test/tests'
 input_folder = gamer_abs_path + '/example/test_problem/Hydro/'
