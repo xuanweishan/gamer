@@ -7,6 +7,5 @@
 #PBS -l nodes=1:ppn=16
 #PBS -l walltime=30:00:00:00
 
-cd ./regression_test
-
-mpirun -map-by ppr:1:socket:pe=4 --report-bindings python regression_test.py -t test_group
+cd /work1/xuanshan/gamer_actions_runner/gamer/gamer/regression_test
+python regression_test.py -t test_group
