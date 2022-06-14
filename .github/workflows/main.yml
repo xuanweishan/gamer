@@ -38,4 +38,4 @@ jobs:
           
           cd regression_test
           #python regression_test.py -t test_group
-          sh action_script.job
+          qsub action_script.job
