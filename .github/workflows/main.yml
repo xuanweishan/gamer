@@ -28,7 +28,7 @@ jobs:
       - name: Set up gamer and library path on eureka the in the Makefile and run test.
         run: |
           #Set up GPU archetecher
-          sed -i 's/SIMU_OPTION += -DGPU_ARCH/SIMU_OPTION += -DGPU_ARCH=TURING #/g' src/Makefile
+          sed -i 's/SIMU_OPTION += -DGPU_ARCH/SIMU_OPTION += -DGPU_ARCH=AMPERE #/g' src/Makefile
           #Set up library pathes
           sed -i 's/#CUDA_PATH\s*:= \/software/CUDA_PATH    := \/software/g' src/Makefile
           sed -i 's/#FFTW_PATH\s*:= \/software/FFTW_PATH    := \/software/g' src/Makefile
@@ -37,5 +37,5 @@ jobs:
           sed -i 's/#GSL_PATH\s*:= \/software/GSL_PATH     := \/software/g' src/Makefile
           
           cd regression_test
-          #python regression_test.py -t test_group
-          qsub action_script.job
+          python regression_test.py -t test_group
+          #qsub action_script.job
