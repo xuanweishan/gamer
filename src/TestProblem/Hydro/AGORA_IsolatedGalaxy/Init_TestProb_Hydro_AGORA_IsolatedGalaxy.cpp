@@ -1,5 +1,4 @@
 #include "GAMER.h"
-#include "TestProb.h"
 
 
 
@@ -38,9 +37,9 @@ double GaussianQuadratureIntegrate( const double dx, const double dy, const doub
 bool Flag_AGORA( const int i, const int j, const int k, const int lv, const int PID, const double *Threshold );
 #ifdef PARTICLE
 void Par_Init_ByFunction_AGORA( const long NPar_ThisRank, const long NPar_AllRank,
-                                real *ParMass, real *ParPosX, real *ParPosY, real *ParPosZ,
-                                real *ParVelX, real *ParVelY, real *ParVelZ, real *ParTime,
-                                real *AllAttribute[PAR_NATT_TOTAL] );
+                                real_par *ParMass, real_par *ParPosX, real_par *ParPosY, real_par *ParPosZ,
+                                real_par *ParVelX, real_par *ParVelY, real_par *ParVelZ, real_par *ParTime,
+                                real_par *ParType, real_par *AllAttribute[PAR_NATT_TOTAL] );
 #endif
 
 
@@ -143,7 +142,7 @@ void Validate()
 
 
 
-#if ( MODEL == HYDRO  &&  defined PARTICLE )
+#if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 //-------------------------------------------------------------------------------------------------------
 // Function    :  SetParameter
 // Description :  Load and set the problem-specific runtime parameters
@@ -236,18 +235,18 @@ void SetParameter()
 
 
 // (3) reset other general-purpose parameters
-//     --> a helper macro PRINT_WARNING is defined in TestProb.h
+//     --> a helper macro PRINT_RESET_PARA is defined in Macro.h
    const long   End_Step_Default = __INT_MAX__;
    const double End_T_Default    =  500.0*Const_Myr/UNIT_T;
 
    if ( END_STEP < 0 ) {
       END_STEP = End_Step_Default;
-      PRINT_WARNING( "END_STEP", END_STEP, FORMAT_LONG );
+      PRINT_RESET_PARA( END_STEP, FORMAT_LONG, "" );
    }
 
    if ( END_T < 0.0 ) {
       END_T = End_T_Default;
-      PRINT_WARNING( "END_T", END_T, FORMAT_REAL );
+      PRINT_RESET_PARA( END_T, FORMAT_REAL, "" );
    }
 
 
@@ -467,7 +466,7 @@ void AddNewField_AGORA()
 // --> since Grackle may already add this field automatically when GRACKLE_METAL is enabled
 // --> also note that "Idx_Metal" has been predefined in Field.h
    if ( AGORA_UseMetal  &&  Idx_Metal == Idx_Undefined )
-      Idx_Metal = AddField( "Metal", NORMALIZE_NO, INTERP_FRAC_YES );
+      Idx_Metal = AddField( "Metal", FIXUP_FLUX_YES, FIXUP_REST_YES, NORMALIZE_NO, INTERP_FRAC_YES );
 
 } // FUNCTION : AddNewField_AGORA
 
@@ -495,7 +494,7 @@ void AddNewParticleAttribute_AGORA()
       Idx_ParMetalFrac = AddParticleAttribute( "ParMetalFrac" );
 
 } // FUNCTION : AddNewParticleAttribute_AGORA
-#endif // #if ( MODEL == HYDRO  &&  defined PARTICLE )
+#endif // #if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
 
@@ -519,7 +518,7 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    Validate();
 
 
-#  if ( MODEL == HYDRO  &&  defined PARTICLE )
+#  if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 // set the problem-specific runtime parameters
    SetParameter();
 
@@ -531,7 +530,7 @@ void Init_TestProb_Hydro_AGORA_IsolatedGalaxy()
    End_User_Ptr                = End_AGORA;
    Par_Init_ByFunction_Ptr     = Par_Init_ByFunction_AGORA;
    Par_Init_Attribute_User_Ptr = AddNewParticleAttribute_AGORA;
-#  endif // if ( MODEL == HYDRO  &&  defined PARTICLE )
+#  endif // if ( MODEL == HYDRO  &&  defined MASSIVE_PARTICLES )
 
 
    if ( MPI_Rank == 0 )    Aux_Message( stdout, "%s ... done\n", __FUNCTION__ );

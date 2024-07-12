@@ -32,24 +32,24 @@
 void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 {
 
-#  ifdef COMOVING
-#  error : ERROR : COMOVING is not supported yet !!
-#  endif
-
-
-   const bool  IncNonleaf = true;
-   const real *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
+   const bool  IncNonleaf     = true;
+   const real_par *Vel[3]     = { amr->Par->VelX, amr->Par->VelY, amr->Par->VelZ };
 #  ifdef STORE_PAR_ACC
-   const real *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
+   const real_par *Acc[3]     = { amr->Par->AccX, amr->Par->AccY, amr->Par->AccZ };
 #  else
-   const real *Acc[3]     = { NULL, NULL, NULL };
+   const real_par *Acc[3]     = { NULL, NULL, NULL };
 #  endif
-   const bool  UseAcc     = ( DT__PARACC > 0.0 );
+#  ifdef MASSIVE_PARTICLES
+   const bool  UseAcc         = ( DT__PARACC > 0.0 );
+#  else
+   const bool  UseAcc         = false;
+#  endif
 #  ifdef OPENMP
-   const int   NT         = OMP_NTHREAD;   // number of OpenMP threads
+   const int   NT             = OMP_NTHREAD;   // number of OpenMP threads
 #  else
-   const int   NT         = 1;
+   const int   NT             = 1;
 #  endif
+   const real_par *ParType    = amr->Par->Type;
 
 #  ifndef STORE_PAR_ACC
    if ( UseAcc )
@@ -63,25 +63,32 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
    const bool FaSibBufPatch_No = false;
    const bool JustCountNPar_No = false;
    const bool TimingSendPar_No = false;
+#  ifdef STORE_PAR_ACC
+   const int  ParAccBIdx       = _PAR_ACC;
+#  else
+   const int  ParAccBIdx       = 0;
+#  endif
 
    if ( IncNonleaf )
-      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?_PAR_ACC:0), PredictPos_No, NULL_REAL,
-                                    SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No, TimingSendPar_No );
+      Par_CollectParticle2OneLevel( lv, _PAR_VEL|((UseAcc)?ParAccBIdx:0)|_PAR_TYPE, PredictPos_No,
+                                    NULL_REAL, SibBufPatch_No, FaSibBufPatch_No, JustCountNPar_No,
+                                    TimingSendPar_No );
 
 
 // get the maximum particle velocity and acceleration on the target level
-   real MaxVel, MaxAcc;
+   real_par MaxVel, MaxAcc;
+   long NParVel=0, NParAcc=0;
 
-   real *MaxVel_OMP = new real [NT];
-   real *MaxAcc_OMP = new real [NT];
+   real_par *MaxVel_OMP = new real_par [NT];
+   real_par *MaxAcc_OMP = new real_par [NT];
 
-   MaxVel = (real)0.0;  // don't assign negative values since we assume it to be positive-definite
-   MaxAcc = (real)0.0;
+   MaxVel = (real_par)0.0;  // don't assign negative values since we assume it to be positive-definite
+   MaxAcc = (real_par)0.0;
 
    for (int t=0; t<NT; t++)
    {
-      MaxVel_OMP[t] = (real)0.0;
-      MaxAcc_OMP[t] = (real)0.0;
+      MaxVel_OMP[t] = (real_par)0.0;
+      MaxAcc_OMP[t] = (real_par)0.0;
    }
 
 //###NOTE: OpenMP may not improve performance here
@@ -93,7 +100,7 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
       const int TID = 0;
 #     endif
 
-#     pragma omp for schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
+#     pragma omp for reduction( +:NParVel, NParAcc ) schedule( PAR_OMP_SCHED, PAR_OMP_SCHED_CHUNK )
       for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
       {
          int   NParThisPatch;
@@ -133,24 +140,41 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
          if ( UseCopy )
          {
 //          ParAtt_Copy[] is only defined in LOAD_BALANCE
-            real *Vel_Copy[3] = { NULL, NULL, NULL };
-            real *Acc_Copy[3] = { NULL, NULL, NULL };
+            real_par *Vel_Copy[3] = { NULL, NULL, NULL };
+            real_par *Acc_Copy[3] = { NULL, NULL, NULL };
+            real_par *Typ_Copy = NULL;
 #           ifdef LOAD_BALANCE
             for (int d=0; d<3; d++)
             {
                Vel_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_VELX + d ];
+#              ifdef STORE_PAR_ACC
                Acc_Copy[d] = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_ACCX + d ];
+#              endif
             }
+            Typ_Copy = amr->patch[0][lv][PID]->ParAtt_Copy[ PAR_TYPE ];
 #           endif
 
             for (int p=0; p<NParThisPatch; p++)
             {
-               for (int d=0; d<3; d++)
-               MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel_Copy[d][p]) );
+//             don't check velocity for tracer particles unless enabling OPT__FREEZE_FLUID
+//             since the fluid CFL condition should be sufficient
+//             --> this ensures that tracer particles do not change the simulation results
+               if ( Typ_Copy[p] != PTYPE_TRACER  ||  OPT__FREEZE_FLUID )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel_Copy[d][p]) );
 
-               if ( UseAcc )
-               for (int d=0; d<3; d++)
-               MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc_Copy[d][p]) );
+                  NParVel ++;
+               }
+
+//             don't check acceleration for tracer particles
+               if ( UseAcc  &&  Typ_Copy[p] != PTYPE_TRACER )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc_Copy[d][p]) );
+
+                  NParAcc ++;
+               }
             }
          } // if ( UseCopy )
 
@@ -160,12 +184,25 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
             {
                const long ParID = ParList[p];
 
-               for (int d=0; d<3; d++)
-               MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
+//             don't check velocity for tracer particles unless enabling OPT__FREEZE_FLUID
+//             since the fluid CFL condition should be sufficient
+//             --> this ensures that tracer particles do not change the simulation results
+               if ( ParType[ParID] != PTYPE_TRACER  ||  OPT__FREEZE_FLUID )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxVel_OMP[TID] = MAX( MaxVel_OMP[TID], FABS(Vel[d][ParID]) );
 
-               if ( UseAcc )
-               for (int d=0; d<3; d++)
-               MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
+                  NParVel ++;
+               }
+
+//             don't check acceleration for tracer particles
+               if ( UseAcc  &&  ParType[ParID] != PTYPE_TRACER )
+               {
+                  for (int d=0; d<3; d++)
+                  MaxAcc_OMP[TID] = MAX( MaxAcc_OMP[TID], FABS(Acc[d][ParID]) );
+
+                  NParAcc ++;
+               }
             }
          } // if ( UseCopy ) ... else ...
       } // for (int PID=0; PID<amr->NPatchComma[lv][1]; PID++)
@@ -187,34 +224,41 @@ void Par_GetTimeStep_VelAcc( double &dt_vel, double &dt_acc, const int lv )
 
 // get the time-step in this rank
    double dt_vel_local, dt_acc_local;
-   dt_vel_local =       amr->dh[lv] / MaxVel;
+   dt_vel_local =       amr->dh[lv] / (double)MaxVel;
 
    if ( UseAcc )
-   dt_acc_local = sqrt( amr->dh[lv] / MaxAcc );
+   dt_acc_local = sqrt( amr->dh[lv] / (double)MaxAcc );
 
 
 // get the minimum time-step in all ranks
    MPI_Allreduce( &dt_vel_local, &dt_vel, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+#  ifndef SERIAL
+   MPI_Reduce( (MPI_Rank==0)?MPI_IN_PLACE:&NParVel, &NParVel, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
+#  endif
 
-   if ( UseAcc )
+   if ( UseAcc ) {
    MPI_Allreduce( &dt_acc_local, &dt_acc, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+#  ifndef SERIAL
+   MPI_Reduce( (MPI_Rank==0)?MPI_IN_PLACE:&NParAcc, &NParAcc, 1, MPI_LONG, MPI_SUM, 0, MPI_COMM_WORLD );
+#  endif
+   }
 
 
 // verify the minimum time-step
-   if ( !Aux_IsFinite(dt_vel)  &&  amr->Par->NPar_Lv[lv] > 0  &&  MPI_Rank == 0 )
+   if ( !Aux_IsFinite(dt_vel)  &&  NParVel > 0  &&  MPI_Rank == 0 )
    {
-      Aux_Message( stderr, "WARNING : time-step estimation by particle velocity is incorrect (dt_vel = %13.7e) !!\n", dt_vel );
+      Aux_Message( stderr, "WARNING : time-step estimation by particle velocity is incorrect (dt_vel = %13.7e, NParVel = %ld) !!\n", dt_vel, NParVel );
       Aux_Message( stderr, "          --> Likely all particles have zero velocity\n" );
 
       if ( DT__PARVEL_MAX < 0.0 )
       Aux_Message( stderr, "          --> You might want to set DT__PARVEL_MAX properly\n" );
    }
 
-   if ( UseAcc  &&  !Aux_IsFinite(dt_acc)  &&  amr->Par->NPar_Lv[lv] )
-      Aux_Error( ERROR_INFO, "time-step estimation by particle acceleration is incorrect (dt_acc = %13.7e) !!\n", dt_acc );
+   if ( UseAcc  &&  !Aux_IsFinite(dt_acc)  &&  NParAcc > 0  &&  MPI_Rank == 0 )
+      Aux_Error( ERROR_INFO, "time-step estimation by particle acceleration is incorrect (dt_acc = %13.7e, NParAcc = %ld) !!\n", dt_acc, NParAcc );
 
 
-// multiply by the safty factor
+// multiply by the safety factor
    dt_vel *= DT__PARVEL;
    if ( DT__PARVEL_MAX >= 0.0 )  dt_vel = MIN( dt_vel, DT__PARVEL_MAX );
 
