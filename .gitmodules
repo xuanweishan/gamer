@@ -1,0 +1,3 @@
+[submodule "regression_test"]
+	path = regression_test
+	url = https://github.com/calab-ntu/gamer_regression_test.git
