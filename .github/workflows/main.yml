@@ -28,4 +28,4 @@ jobs:
       - name: Set up gamer and library path on eureka the in the Makefile and run test.
         run: |
           cd regression_test
-          python regression_test.py
+          python3 regression_test.py
