@@ -29,5 +29,7 @@ jobs:
         env: 
           REGRESSION_TEST_TOKEN: ${{ secrets.REGRESSION_TEST_TOKEN }}
         run: |
+          echo $REGRESSION_TEST_TOKEN
+          ls
           git clone "https://xuanweishan:$REGRESSION_TEST_TOKEN@github.com/xuanweishan/gamer_regression_test.git" regression_test
           ls regression_test
