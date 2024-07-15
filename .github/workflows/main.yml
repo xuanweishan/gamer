@@ -24,12 +24,11 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      
       - name: Set up gamer and library path on eureka the in the Makefile and run test.
-        env: 
+      - shell: bash
+        env:
           REGRESSION_TEST_TOKEN: ${{ secrets.REGRESSION_TEST_TOKEN }}
         run: |
-          echo $REGRESSION_TEST_TOKEN
-          ls
+          echo 
           git clone "https://xuanweishan:$REGRESSION_TEST_TOKEN@github.com/xuanweishan/gamer_regression_test.git" regression_test
           ls regression_test
