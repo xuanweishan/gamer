@@ -27,7 +27,7 @@ jobs:
       
       - name: Set up gamer and library path on eureka the in the Makefile and run test.
         env: 
-          REGRESSION_TEST_TOKEN: ${{ secrets.regression_test_token }}
+          REGRESSION_TEST_TOKEN: ${{ secrets.REGRESSION_TEST_TOKEN }}
         run: |
           git clone https://xuanweishan:$REGRESSION_TEST_TOKEN@github.com/xuanweishan/gamer_regression_test.git regression_test
           ls regression_test
