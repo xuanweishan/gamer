@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: test_regression
+name: Regression_test
 
 # Controls when the workflow will run
 on:
@@ -35,7 +35,13 @@ jobs:
           else
             git clone "https://xuanweishan:$REGRESSION_TEST_TOKEN@github.com/xuanweishan/gamer_regression_test.git" regression_test
           fi
-          
+
+      - name: Set up environment
+        run: |
+          module list
+          module load intel openmpi hdf fftw cuda valgrind gsl
+          module list
+    
       - name: Run regression test
         run: |
           cd regression_test
