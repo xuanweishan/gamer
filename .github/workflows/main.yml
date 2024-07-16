@@ -39,7 +39,7 @@ jobs:
       - name: Set up environment
         run: |
           module list
-          module load intel openmpi hdf fftw cuda valgrind gsl
+          module load intel openmpi hdf5 fftw cuda valgrind gsl
           module list
     
       - name: Run regression test
