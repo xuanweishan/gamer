@@ -45,4 +45,4 @@ jobs:
       - name: Run regression test
         run: |
           cd regression_test
-          python3 regression_test.py
+          python3 regression_test.py --machine spock_intel
