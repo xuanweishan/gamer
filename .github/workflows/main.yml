@@ -41,7 +41,15 @@ jobs:
           module list
           module load intel openmpi hdf5 fftw cuda valgrind gsl
           module list
-    
+
+      - name: Modify the Makefile of gamer compare tool
+        run: |
+          if [ -d /sofware/hdf5/default ]; then
+            cd tool/analysis/gamer_compare_data
+            sed s\HDF5_PATH := /software/hdf5/default\#HDF5_PATH := /software/hdf5/default\g
+            sed s\#HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\g
+          fi
+
       - name: Run regression test
         run: |
           cd regression_test
