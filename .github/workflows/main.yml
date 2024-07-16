@@ -46,8 +46,11 @@ jobs:
         run: |
           if ! [ -d /sofware/hdf5/default ]; then
             cd tool/analysis/gamer_compare_data
-            sed s\HDF5_PATH := /software/hdf5/default\#HDF5_PATH := /software/hdf5/default\g Makefile
-            sed s\#HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\g Makefile
+            mv Makefile Makefile.backup
+            sed 's\HDF5_PATH := /software/hdf5/default\#HDF5_PATH := /software/hdf5/default\g' Makefile.backup > Makefile.tmp
+            sed 's\#HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\g' Makefile.tmp > Makefile
+            rm Makefile.tmp Makefile
+            mv Makefile.backup Makefile
           fi
 
       - name: Run regression test
