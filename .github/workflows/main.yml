@@ -29,8 +29,12 @@ jobs:
         env:
           REGRESSION_TEST_TOKEN: ${{ secrets.regression_test_token }}
         run: |
-          git clone "https://xuanweishan:$REGRESSION_TEST_TOKEN@github.com/xuanweishan/gamer_regression_test.git" regression_test
-
+          if [ -f regression_test/regression_test.py ]
+            echo "Regression test has exist"
+          else
+            git clone "https://xuanweishan:$REGRESSION_TEST_TOKEN@github.com/xuanweishan/gamer_regression_test.git" regression_test
+          fi
+          
       - name: Run regression test
         run: |
           cd regression_test
