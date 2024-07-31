@@ -29,7 +29,7 @@ jobs:
         env:
           REGRESSION_TEST_TOKEN: ${{ secrets.regression_test_token }}
         run: |
-          if [ -f regression_test/regression_test.py ] 
+          if [ -f regression_test/regression_test.py ]
           then
             echo "Regression test has exist"
           else
@@ -42,18 +42,14 @@ jobs:
           module load intel openmpi hdf5 fftw cuda valgrind gsl
           module list
 
-      - name: Modify the Makefile of gamer compare tool
-        run: |
-          if ! [ -d /sofware/hdf5/default ]; then
-            cd tool/analysis/gamer_compare_data
-            mv Makefile Makefile.backup
-            sed 's\HDF5_PATH := /software/hdf5/default\#HDF5_PATH := /software/hdf5/default\g' Makefile.backup > Makefile.tmp
-            sed 's\#HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\HDF5_PATH := /software/hdf5/1.10.6-intel-2023.1.0\g' Makefile.tmp > Makefile
-            rm Makefile.tmp Makefile.backup
-
-          fi
-
       - name: Run regression test
         run: |
+          if [[ `hostname` == *'spock'* ]]
+          then
+            machine_name=spock_intel
+          else
+            machine_name=eureka_intel
+          fi
+          
           cd regression_test
-          python3 regression_test.py --machine spock_intel
+          python3 regression_test.py --machine ${machine_name}
