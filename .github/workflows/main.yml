@@ -53,3 +53,7 @@ jobs:
           
           cd regression_test
           python3 regression_test.py --machine ${machine_name}
+
+      - name: Clean the test result
+        run: |
+          rm -rf ./*
